@@ -49,3 +49,44 @@ class GetCovExpected(PipelineModule):
         df = global_state[self.df_key]
         global_state[self.cov_key] = df.cov()
         global_state[self.exp_key] = df.mean()
+
+
+class AddFixedRates(PipelineModule):
+    """
+    Adds fixed rate assets.
+    """
+    def __init__(self, key, rates_info):
+        self.key = key
+        # month must be 1-12 I guess?
+        self.rates_info = rates_info  # expect label, rate, months tuples
+
+    def run(self, global_state, verbose=False):
+        if verbose:
+            print(f'Adding {len(self.rates_info)} fixed rate assets...')
+        if self.key not in global_state:
+            global_state[self.key] = dict()
+        for label, rate, period in self.rates_info:
+            rate = self.calculate_monthly_rate(rate, period)
+            global_state[self.key][label] = rate  # %change you would expect each month
+
+    @staticmethod
+    def calculate_monthly_rate(rate, period):
+        """
+        Calculates the %change you would expect for each month
+
+        so for the outputted rate, we should have
+        (rate + 1) ** period = 1 + rate / (12/period)
+
+        eg. for a 4% interest, compounded quarterly, we expect every 3 months you'll gain 1%,
+        which equates to a 0.3322% increase per month
+
+        :param rate: annual rate
+        :param period: number of months for the compounding period
+        :return: %change expected for each month
+        """
+        rate = rate / (12 / period)  # % appreciation for each compounding period
+        rate += 1
+        # solve (new_rate^months) = rate
+        rate = rate ** (1 / period)
+        rate -= 1
+        return rate
