@@ -35,6 +35,9 @@ def create_loss(cfg, tickers):
     assert 'type' in cfg, 'cfg needs <type> key, specifying type of loss'
     loss = TYPES_DICT[cfg['type']]
     if cfg['type'] in ['group']:
+        if isinstance(cfg['indices'], str):
+            cfg['indices'] = eval(cfg['indices'])
+            assert isinstance(cfg['indices'], list), 'indices for group constraint should result in a list'
         cfg['indices'] = [tickers.index(t) for t in cfg['indices']]
     cfg.pop('type')
     if 'multiplier' not in cfg:
