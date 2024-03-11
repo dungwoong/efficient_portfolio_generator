@@ -18,7 +18,7 @@ def main(config_file, verbose):
         tickers = list(tickers.keys())
     fixed_rates = [(d['label'], d['rate'], d['months']) for d in cfg['fixed_rates']]
     gd_cfg = cfg['gd_cfg']
-    output_path = cfg['output_path']
+    output_path = cfg['output_path'] if 'output_path' in cfg else 'results'
 
     s = SequentialModule([
         ds.DownloadTickerHistorical('df', 'tickers', tickers, period='5y', interval='1mo'),
