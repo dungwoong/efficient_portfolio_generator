@@ -109,6 +109,6 @@ class GroupLoss(GDLoss):
         r = results_dict['proportions'][self.indices, ...]
         prop = r.sum()
         if not self.both_dirs:
-            return torch.nn.functional.relu(prop - self.target)
+            return self.multiplier * torch.nn.functional.relu(prop - self.target)
         else:
-            return torch.abs(prop - self.target)
+            return self.multiplier * torch.abs(prop - self.target)

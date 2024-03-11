@@ -31,9 +31,11 @@ HELP_DICT = {
 }
 
 
-def create_loss(cfg):
+def create_loss(cfg, tickers):
     assert 'type' in cfg, 'cfg needs <type> key, specifying type of loss'
     loss = TYPES_DICT[cfg['type']]
+    if cfg['type'] in ['group']:
+        cfg['indices'] = [tickers.index(t) for t in cfg['indices']]
     cfg.pop('type')
     if 'multiplier' not in cfg:
         cfg['multiplier'] = 1
@@ -41,15 +43,17 @@ def create_loss(cfg):
 
 
 class CreateGDModule(PipelineModule):
-    def __init__(self, cfg, exp_key, cov_key, gd_key, losses_key):
+    def __init__(self, cfg, exp_key, cov_key, gd_key, losses_key, tickers_key):
         self.cfg = cfg
         self.exp_key, self.cov_key = exp_key, cov_key
         self.gd_key = gd_key
         self.losses_key = losses_key
+        self.tickers_key = tickers_key
 
     def run(self, global_state, verbose=False):
+        tickers = global_state[self.tickers_key]
         # cfg['losses'] should be a list of dicts
-        losses = [create_loss(l_cfg) for l_cfg in self.cfg['losses']]
+        losses = [create_loss(l_cfg, tickers) for l_cfg in self.cfg['losses']]
         global_state[self.losses_key] = losses
         global_state[self.gd_key] = gd.GDPortfolio(global_state[self.cov_key],
                                                    global_state[self.exp_key],
@@ -65,16 +69,19 @@ class RunGDModule(PipelineModule):
 
     @staticmethod
     def process_label(loss):
-        return loss.label if loss.label != '' else str(type(loss))
+        def process_class_label(label):
+            return label.split('gdportfolio.')[-1].split("'")[0]
+
+        return loss.label if loss.label != '' else process_class_label(str(type(loss)))
 
     def run(self, global_state, verbose=False):
         global_state[self.gd_key].gd_portfolio()
         allocations = dict(pd.Series(global_state[self.gd_key].get_allocations(), index=global_state[self.tickers_key]))
         results = global_state[self.gd_key].run_with_start()
-        final_loss_breakdown = [(self.process_label(loss), loss.run(results).item()) for loss in global_state[self.losses_key]]
+        final_loss_breakdown = [(self.process_label(loss), loss.run(results).item() / loss.multiplier) for loss in global_state[self.losses_key]]
         ret = {
             'final_allocations': allocations,
-            'final_loss_breakdown': final_loss_breakdown,
+            'final_loss_breakdown_without_multipliers': final_loss_breakdown,
             'final_exp': results['expected_vals'].sum().item(),
             'final_var': results['cov_matrix'].sum().item(),
         }
