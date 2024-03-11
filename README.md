@@ -4,6 +4,7 @@ idk
 
 # todos
  - make a script to run quickly
+ - reorganize the classes
  - [DONE] output the actual csvs for cov, exp etc.
  - do some simulations
  - output a latex doc instead of a bunch of random plots

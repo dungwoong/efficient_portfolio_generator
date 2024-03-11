@@ -12,7 +12,7 @@ class CreateOutputFolder(PipelineModule):
 
     def run(self, global_state, verbose=False):
         if not os.path.exists(self.path):
-            os.mkdir(self.path)
+            os.makedirs(self.path)
             if verbose:
                 print(f'Made folder at {self.path}')
         if self.path_key is not None:
