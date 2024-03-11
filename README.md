@@ -1,4 +1,21 @@
 # The Project
+This script will give you exploratory analysis and a sample stock portfolio given a configuration file for what you want your portfolio to look like. 
+
+Check [this sample config](sample/config.json) to see what a sample configuration file should look like. Here are the main points
+ - tickers: Make sure the format is from Yahoo Finance
+ - fixed_rates: label, rate and months(compounding period). This is used to represent fixed-rate assets such as cash accounts
+ - losses: defines the losses. Check [process_gd_args.py](pipeline/process_gd_args.py) for some help. Note that 'multiplier' should also be a key if needed
+
+Then, run ```python run_gd_portfolio.py --config-file your_file_here.json``` to run the script.
+
+# Sample Outputs
+![](sample/results/allocations_pie.jpg)
+
+Sample Portfolio with some index funds and a cash account that pays 4% annually
+
+![](sample/results/final_exp.jpg) ![](sample/results/final_var.jpg)
+
+We see that our portfolio has similar expected % increase per month compared to the SPY index fund, with slightly lower variance
 
 # The Math
 Given a vector $exp$ of expected change for a list of assets, and a covariance matrix $cov$ and a column vector of proportions for all the assets $p$:
