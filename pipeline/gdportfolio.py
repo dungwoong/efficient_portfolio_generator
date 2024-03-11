@@ -5,8 +5,9 @@ import torch.nn.functional as F
 
 
 class GDLoss:
-    def __init__(self, multiplier):
+    def __init__(self, multiplier, label=''):
         self.multiplier = multiplier
+        self.label = label
 
     def run(self, results_dict):
         raise NotImplementedError
@@ -28,11 +29,11 @@ class GDPortfolio:
             proportions = F.softmax(self.props, dim=0)
             return proportions
 
-    def gd_portofolio(self, epochs=1000, lr=1):
+    def gd_portfolio(self, epochs=1000, lr=1):
         opt = torch.optim.SGD([self.props], lr=lr)
         for _ in range(epochs):
             opt.zero_grad()
-            results = self._run_with_start()
+            results = self.run_with_start()
             loss = self.process_losses(results)
             loss.backward()
             opt.step()
@@ -60,7 +61,7 @@ class GDPortfolio:
                 'cov_matrix': cov_matrix,
                 'expected_vals': expected_vals}
 
-    def _run_with_start(self):
+    def run_with_start(self):
         proportions = F.softmax(self.props, dim=0)
         return self.run(proportions)
 
@@ -88,10 +89,26 @@ class L2ExpLoss(GDLoss):
     L2 norm of target_exp - exp
     """
 
-    def __init__(self, multiplier, target_exp):
-        super().__init__(multiplier)
+    def __init__(self, multiplier, target_exp, label=''):
+        super().__init__(multiplier, label=label)
         self.target_exp = target_exp
 
     def run(self, results_dict):
         exp = results_dict['expected_vals'].sum()
         return self.multiplier * torch.square(self.target_exp - exp)
+
+
+class GroupLoss(GDLoss):
+    def __init__(self, multiplier, indices, target, both_dirs, label=''):
+        super().__init__(multiplier, label=label)
+        self.indices = indices
+        self.target = target
+        self.both_dirs = both_dirs
+
+    def run(self, results_dict):
+        r = results_dict['proportions'][self.indices, ...]
+        prop = r.sum()
+        if not self.both_dirs:
+            return torch.nn.functional.relu(prop - self.target)
+        else:
+            return torch.abs(prop - self.target)
