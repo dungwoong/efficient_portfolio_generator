@@ -48,7 +48,7 @@ class GDVis(PipelineModule):
         bars = ax.bar(data.index, data)
         bars[idx].set_color('red')
         plt.title('Final Variance Comparison')
-        plt.ylabel('Expected % increase per month')
+        plt.ylabel('Variance in % increase per month')
         f.savefig(os.path.join(state[self.output_path_key], 'final_var.jpg'))
 
     def final_losses_pie(self, state):
