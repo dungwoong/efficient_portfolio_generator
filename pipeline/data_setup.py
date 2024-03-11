@@ -41,22 +41,24 @@ class GetCovExpected(PipelineModule):
     Adds cov and exp to global state
     """
 
-    def __init__(self, df_key, cov_key, exp_key):
+    def __init__(self, df_key, cov_key, exp_key, ticker_key):
         self.df_key = df_key
         self.cov_key, self.exp_key = cov_key, exp_key
+        self.ticker_key = ticker_key
 
     def run(self, global_state, verbose=False):
         df = global_state[self.df_key]
         global_state[self.cov_key] = df.cov()
         global_state[self.exp_key] = df.mean()
+        global_state[self.ticker_key] = list(global_state[self.cov_key].columns)
 
 
 class AddFixedRates(PipelineModule):
     """
-    Adds fixed rate assets.
+    Adds fixed rate assets. Adds monthly gain to the df of gains
     """
-    def __init__(self, key, rates_info):
-        self.key = key
+    def __init__(self, df_key, rates_info):
+        self.key = df_key
         # month must be 1-12 I guess?
         self.rates_info = rates_info  # expect label, rate, months tuples
 
