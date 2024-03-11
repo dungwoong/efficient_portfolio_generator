@@ -29,6 +29,7 @@ class GDVis(PipelineModule):
         data = state[self.df_key].mean()
         data['portfolio'] = state[self.gd_results_key]['final_exp']
         data = data.sort_values(ascending=False)
+        data.to_csv(os.path.join(state[self.output_path_key], 'exp.csv'))
         idx = list(data.index).index('portfolio')
         f, ax = plt.subplots()
         bars = ax.bar(data.index, data)
@@ -41,6 +42,7 @@ class GDVis(PipelineModule):
         data = state[self.df_key].var()
         data['portfolio'] = state[self.gd_results_key]['final_var']
         data = data.sort_values(ascending=True)
+        data.to_csv(os.path.join(state[self.output_path_key], 'var.csv'))
         idx = list(data.index).index('portfolio')
         f, ax = plt.subplots()
         bars = ax.bar(data.index, data)
